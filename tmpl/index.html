@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script type="module"  src="/static/bootstrap-table/bootstrap-table.js"></script>
+    <script type="module"  src="/static/bootstrap-table/extensions/filter-control/bootstrap-table-filter-control.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/bootstrapv5/css/bootstrap.min.css"> <!-- CSS reset -->
+    <link rel="stylesheet" href="/static/bootstrap-table/bootstrap-table.css"> <!-- CSS reset -->
+    <title>{{title}}</title>
+</head>
+<body>
+
+<script src="/static/highcharts.js"></script>
+<script src="/static/highcharts-more.js"></script>
+<script src="/static/exporting.js"></script>
+<script src="/static/accessibility.js"></script>
+<script src="/static/jquery-3.6.1.min.js"></script>
+
+<script src="/static/bootstrapv5/js/bootstrap.min.js"></script>
+<script src="/static/jquery.init.js"></script>
+
+<script>
+ var Main={"is_debug":false, "dashboard": null, table:null};
+ Date.prototype.yyyymmdd = function() {
+  var mm = this.getMonth() + 1; // getMonth() is zero-based
+  var dd = this.getDate();
+
+  return [this.getFullYear(),
+          (mm>9 ? '' : '0') + mm,
+          (dd>9 ? '' : '0') + dd
+         ].join('-');
+};
+window.operateEvents = {
+    'click .edit': function (e, value, row, index) {
+        var my_url = "/api/record-detail/" + row.id;
+        $.ajax({"method": "GET",
+                "url": my_url }).done(function( msg ) {
+                                  $("#custom_form").html(msg);
+                                  $("#custom_form_modal").modal("show");
+
+                  });
+
+
+    },
+    'click .remove': function (e, value, row, index) {
+        Main.table.bootstrapTable('remove', {
+                                  field: 'id',
+                                  values: [row.id]
+                                  })
+    }
+  };
+
+
+
+ $(function() {
+      $("#table_trans").bootstrapTable();
+      Main.table = $("#table_trans");
+
+
+     //data-account="{{item.account.name}}"
+    $(".project_link").css({"cursor":"pointer"});
+    $(".project_link").bind("click", function(e){
+        var name = $(this).data("project");
+        for(var i in Main.dashboard.series){
+               var o = Main.dashboard.series[i];
+               if(o.name == name){
+                    if(o.visible){
+                        $(this).removeClass("btn");
+                        $(this).removeClass("btn-info");
+                        o.hide();
+                    }
+                    else{
+                        $(this).addClass("btn");
+                        $(this).addClass("btn-info");
+                        o.show();
+                    }
+               }
+
+        }
+
+    });
+
+    $(".account_link").css({"cursor":"pointer"});
+    $(".account_link").bind("click", function(e){
+                 var account  =	$(this).data("account");
+                 var my_url = "/api/trans";
+                 $("#trans_title").html(account);
+                 console.log(my_url);
+                 $.ajax({ method: "POST",
+		          data :  {"category": account, "context":"account"} ,
+                          dataType: "json",
+                          url: my_url }).done(function( msg ) {
+
+                                  $("#table_trans").bootstrapTable('removeAll');
+                                  $("#table_trans").bootstrapTable('load', msg["data"]);
+                                  $("#trans_info").modal("show");
+
+                  });
+
+
+    });
+    Main.submit_custom_form = function(my_url){
+
+        console.log(my_url);
+        var form_data = {};
+        $("#custom_form .form-control").each(function(elem){
+                                                form_data[$(this).attr("name")] = $(this).val()
+                                             });
+        console.log(form_data);
+        $.ajax({ method: "POST",
+		         data : form_data,
+                 dataType: "json",
+                 url: my_url }).done(function( msg ) {
+                                Main.table.bootstrapTable('refresh');
+                                $("#custom_form").modal("hide");
+                            });
+    };
+
+
+	 // TODO add caching
+
+	 Main["show_all7"] = function(){
+                 var my_url = "/api/trans";
+                 var date = new Date();
+                 var days = 7;
+                 var last = new Date(date.getTime() - (days * 24 * 60 * 60 * 1000));
+                 var day = last.getDate();
+                 var  dt = last.yyyymmdd();
+                 $("#trans_title").html( dt);
+                 console.log(my_url);
+                 $.ajax({ method: "POST",
+		                  data :  {"date": dt} ,
+                          dataType: "json",
+                          url: my_url }).done(function( msg ) {
+
+                                  $("#table_trans").bootstrapTable('removeAll');
+                                  $("#table_trans").bootstrapTable('load', msg["data"]);
+                                  $("#trans_info").modal("show");
+
+                  });
+
+	 };
+	 Main["show_all90"] = function(){
+                 var my_url = "/api/trans";
+                 var date = new Date();
+                 var days = 7;
+                 var last = new Date(date.getTime() - (days * 24 * 60 * 60 * 1000));
+                 var day = last.getDate();
+                 var  dt = last.yyyymmdd();
+                 $("#trans_title").html( dt);
+                 console.log(my_url);
+                 $.ajax({ method: "POST",
+		          data :  {"date": dt} ,
+                          dataType: "json",
+                          url: my_url }).done(function( msg ) {
+                                  $("#table_trans").bootstrapTable('removeAll');
+                                  $("#table_trans").bootstrapTable('load', msg["data"]);
+                                  $("#trans_info").modal("show");
+
+                  });
+
+	 };
+	 Main["current_object"] = null;
+ 	 Main["get_trans_q"] = function(q_id){
+	 	 var my_url = "/api/trans_q/" + q_id;
+		 $.ajax({ method: "GET",
+			      dataType: "json",
+			      url: my_url }).done(function( msg ) {
+ 								alert(msg)
+ 						     });
+	 };
+
+     Main["setposition"] = function(e, project, name, context, title) {
+				     var bodyOffsets = document.body.getBoundingClientRect();
+				     tempX = e.pageX - bodyOffsets.left;
+				     tempY = e.pageY;
+				     console.log(tempX);
+			             $("#context_title").html(project + " " +title);
+			             $("#project_title").html(project);
+				     $("#xxx").show();
+				     $("#xxx").data({ "context":context, "category": name, "project": project, "title": title});
+				     $("#xxx").css({ 'top': tempY, 'left': tempX });
+             };
+
+	 Main["show_info"] = function(e){
+		 var context  =	$("#xxx").data("context");
+		 var project  =	$("#xxx").data("project");
+		 var category = $("#xxx").data("category");
+		 var title = $("#xxx").data("title");
+                 $("#conv_title").html(title);
+                 var my_url = "/api/common_info"; 
+	             if(Main.is_debug)
+		             my_url+="?html=1";
+                 console.log(my_url); 
+	             console.log(e);
+                 $.ajax({ method: "POST",
+		          data :  {"project": project, "category": category,  "context": context} , 
+			      dataType: "json",
+			      url: my_url }).done(function( msg ) {
+					     	   Main.current_object = msg;
+						       Main.show_common_info(msg);
+						     });
+                
+	 };
+
+     Main["show_project"]= function(e){
+		 var project  =	$("#xxx").data("project");
+		 var title = $("#xxx").data("title");
+                 $("#project_info_title").html(project);
+		 var my_url = "/api/project/info"
+                 $.ajax({ method: "POST",
+		        data :  {"project": project} , 
+			  dataType: "json",	 
+			  url: my_url }).done(function( msg ) {
+			  					Main.current_object = msg;
+                                Main.draw_project_info(msg);
+
+			});
+	         
+
+
+	 };
+
+     Main["project_operations"]= function(e){
+		 		 var project  =	$("#xxx").data("project");
+
+                 var my_url = "/api/trans"; 
+		 		 var title = $("#xxx").data("title");
+                 $("#trans_title").html(title);
+
+                 console.log(my_url); 
+
+                 $.ajax({ method: "POST",
+		          data :  {"category": project, "context":"project"} ,
+			      dataType: "json",
+			      url: my_url }).done(function( msg ) {
+                                  $("#table_trans").bootstrapTable('removeAll');
+                                  $("#table_trans").bootstrapTable('load', msg["data"]);
+                                  $("#trans_info").modal("show");
+                      }); 
+
+
+         };
+         Main["show_map"] = function(e){
+		 var context  =	$("#xxx").data("context");
+		 var project  =	$("#xxx").data("project");
+		 var category = $("#xxx").data("category");
+		 var url = "";
+	         if(context == "account")		 
+                    my_url = "/api/account_map"; 
+		     else
+                    my_url = "/api/contragent_map";
+
+             console.log(my_url);
+             $.ajax({ method: "POST",
+		             data :  {"project": project, "category": category,  "context": context} ,
+			         dataType: "json",
+			         url: my_url }).done(function( msg ) {
+               			  var name = $("#xxx").data("category");
+               			  $("#map_info_title").html(name);
+               			  Main.current_object = msg;
+                          draw_account_map(msg);
+			});
+			
+	};		 
+		 
+	 Main["show_operation"] = function(e){
+               
+		 var context  =	$("#xxx").data("context");
+		 var project  =	$("#xxx").data("project");
+		 var category = $("#xxx").data("category");
+         var my_url = "/api/trans_context";
+		 var title = $("#xxx").data("title");
+         $("#trans_title").html(title);
+
+         console.log(my_url);
+         $.ajax({ method: "POST",
+		          data :  {"project": project, "category": category,  "context": context} ,
+			      dataType: "json",
+			      url: my_url }).done(function( msg ) {
+                                  $("#table_trans").bootstrapTable('removeAll');
+                                  $("#table_trans").bootstrapTable('load', msg["data"]);
+                                  $("#trans_info").modal("show");
+
+                 });
+	};
+
+function draw_account_map(msg){
+
+    console.log(msg);
+    var debits = [];
+    var credits = [];
+    for(var j in msg["categories"]){
+    
+      var i = msg["categories"][j];
+      
+      if(i in msg["credits"]){
+          credits.push(msg["credits"][i].amnt);
+      }else{
+          credits.push(0);
+      }
+      
+      if(i in msg["debits"]){
+          debits.push(msg["debits"][i].amnt);
+      }else{
+         debits.push(0);
+      }
+      
+    
+    }
+
+    Highcharts.chart('map_container', {
+
+    chart: {
+        polar: true,
+        type: 'area'
+    },
+
+    accessibility: {
+        description: ''
+    },
+
+    title: {
+        text: 'расходы/приходы',
+        x: -80
+    },
+
+    pane: {
+        size: '80%'
+    },
+
+    xAxis: {
+        categories: msg["categories"],
+        tickmarkPlacement: 'on',
+        lineWidth: 0
+    },
+
+    yAxis: {
+        gridLineInterpolation: 'polygon',
+        lineWidth: 0,
+        min: 0
+    },
+
+    tooltip: {
+        shared: true,
+        pointFormat: '<span style="color:{series.color}">{series.name}: <b>${point.y:,.0f}</b><br/>'
+    },
+
+    legend: {
+        align: 'right',
+        verticalAlign: 'middle',
+        layout: 'vertical'
+    },
+
+    series: [{
+        name: 'Приходы ',
+        data: debits,
+        pointPlacement: 'on'
+    }, {
+        name: 'Расходы',
+        data: credits,
+        pointPlacement: 'on'
+    }],
+
+    responsive: {
+        rules: [{
+            condition: {
+                maxWidth: 500
+            },
+            chartOptions: {
+                legend: {
+                    align: 'center',
+                    verticalAlign: 'bottom',
+                    layout: 'horizontal'
+                },
+                pane: {
+                    size: '70%'
+                }
+            }
+        }]
+    }
+
+  });
+
+  $("#map_modal").modal("show");
+
+};         
+
+
+ var series_data = [
+  {% for item in total_arr %}
+
+		 { "name": "{{item.project}}",
+		   "visible":false,
+		   "allowPointSelect": true,
+		   "data":[
+		      {% for obj in item.data %}
+		      {
+                      {% if obj.contragent %}
+				       "name": " контрагент {{obj.name}}",
+			          {% endif %}
+                                     
+				      {% if obj.account %}
+
+				      "name": " счет {{obj.name}}",
+
+				      {% endif %}
+                                     
+				      "value": {{obj.value|stringformat:"f"}},
+	   	              "events": {
+                         click: function(event){
+                                  console.log("lower");
+                                  console.log(event);
+                                  Main.setposition(event, '{{item.project}}','{{obj.name}}', {% if obj.contragent%} "contragent" {%else%}  "account" {% endif %} ,
+                                              {% if obj.contragent%} " контрагент {{obj.name}}" {%else%}  "счет {{obj.name}}" {% endif %}
+                                          );
+                                  console.log($("#xxx").data("context"));
+                                  return true;
+			              }
+				     }
+		      },
+                      {% endfor %}				   
+	             ]			   
+                 },
+   {% endfor %}
+
+];
+
+Main["draw_project_info"]  = function(data){
+	Highcharts.chart('ppie_head', {
+	    chart: {
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false,
+		type: 'pie'
+	    },
+	    title: {
+		text: 'Отношение расходов/приходов'
+	    },
+	    tooltip: {
+		pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+	    },
+	    accessibility: {
+		point: {
+		    valueSuffix: '%'
+		}
+	    },
+	    plotOptions: {
+		pie: {
+		    allowPointSelect: true,
+		    cursor: 'pointer',
+		    dataLabels: {
+		        enabled: true,
+		        format: '<b>{point.name}</b>: {point.y:.1f} '
+		    }
+		}
+	    },
+	    series: [
+	      {"name":"Общии расходы/приходы",
+			"colorByPoint": true,
+	   
+			data: [{
+				name: "Расход",
+				y: data["credit"],
+				sliced: true,
+				selected: true
+			}, {
+				name: 'Приходы',
+				y: data["debit"]
+			},]
+	    }]
+	  
+	   
+	});
+
+	var common_income_credit = data["account_credit"];
+	var common_income_credit_data = [];
+	for(var i in common_income_credit){
+		common_income_credit_data.push({"name":i,
+		                                "y":common_income_credit[i]["amnt"] })
+			
+	} 
+	var common_income_debit = data["account_debit"];
+	var common_income_debit_data = [];
+	for(var i in common_income_debit){
+		common_income_debit_data.push({"name":i,
+		                               "y":common_income_debit[i]["amnt"] })
+			
+	} 
+
+	 //income by context 
+       Highcharts.chart('ppie1', {
+	    chart: {
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false,
+		type: 'pie'
+	    },
+	    title: {
+		text: 'Приходы'
+	    },
+	    tooltip: {
+		pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+	    },
+	    accessibility: {
+		point: {
+		    valueSuffix: '%'
+		}
+	    },
+	    plotOptions: {
+		pie: {
+		    allowPointSelect: true,
+		    cursor: 'pointer',
+		    dataLabels: {
+		        enabled: true,
+		        format: '<b>{point.name}</b>: {point.y:.1f} '
+		    }
+		}
+	    },
+	    series: [
+	      {"name":"Приходы",
+		"colorByPoint": true,        
+		data:common_income_debit_data
+	    }]
+	  
+	   
+	});  
+	   
+   
+   
+	   //credit by context
+	 Highcharts.chart('ppie2', {
+	    chart: {
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false,
+		type: 'pie'
+	    },
+	    title: {
+		text: 'расходы '
+	    },
+	    tooltip: {
+		pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+	    },
+	    accessibility: {
+		point: {
+		    valueSuffix: '%'
+		}
+	    },
+	    plotOptions: {
+		pie: {
+		    allowPointSelect: true,
+		    cursor: 'pointer',
+		    dataLabels: {
+		        enabled: true,
+		        format: '<b>{point.name}</b>: {point.y:.1f} '
+		    }
+		}
+	    },
+	    series: [
+	      {"name":"Общии расходы ",
+		"colorByPoint": true,        
+		"data": common_income_credit_data
+	    }]
+	  
+	});
+	var common_income_credit1 = data["contragent_credit"];
+	var common_income_credit_data1 = []
+	for(var i in common_income_credit1){
+		common_income_credit_data1.push({"name":i, "y":common_income_credit1[i]["amnt"] })
+			
+	} 
+	var common_income_debit1 = data["contragent_debit"];
+	var common_income_debit_data1 = []
+	for(var i in common_income_debit1){
+		common_income_debit_data1.push({"name":i, "y":common_income_debit1[i]["amnt"] })
+			
+	} 
+
+	 //income by context 
+       Highcharts.chart('ppie3', {
+	    chart: {
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false,
+		type: 'pie'
+	    },
+	    title: {
+		text: 'Приходы'
+	    },
+	    tooltip: {
+		pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+	    },
+	    accessibility: {
+		point: {
+		    valueSuffix: '%'
+		}
+	    },
+	    plotOptions: {
+		pie: {
+		    allowPointSelect: true,
+		    cursor: 'pointer',
+		    dataLabels: {
+		        enabled: true,
+		        format: '<b>{point.name}</b>: {point.y:.1f} '
+		    }
+		}
+	    },
+	    series: [
+	      {"name":"Приходы",
+		"colorByPoint": true,        
+		"data":common_income_debit_data1
+	    }]
+	  
+	   
+	});  
+	   
+   
+   
+	   //credit by context
+	 Highcharts.chart('ppie4', {
+	    chart: {
+		plotBackgroundColor: null,
+		plotBorderWidth: null,
+		plotShadow: false,
+		type: 'pie'
+	    },
+	    title: {
+		text: 'расходы '
+	    },
+	    tooltip: {
+		pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+	    },
+	    accessibility: {
+		point: {
+		    valueSuffix: '%'
+		}
+	    },
+	    plotOptions: {
+		pie: {
+		    allowPointSelect: true,
+		    cursor: 'pointer',
+		    dataLabels: {
+		        enabled: true,
+		        format: '<b>{point.name}</b>: {point.y:.1f} '
+		    }
+		}
+	    },
+	    series: [
+	      {"name":"Общии расходы ",
+		"colorByPoint": true,        
+		"data": common_income_credit_data1
+	    }]
+	  
+	});
+
+	$("#project_common_info").modal("show");
+};		 
+//common info show
+Main["show_common_info"] = function(data){
+
+    Highcharts.chart('pie_head', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Отношение расходов/приходов'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: false,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.y:.1f} '
+            }
+        },
+        series:{
+        	cursor: "pointer",
+			point: {
+				events: {
+				  click: function(oEvent) {
+				  	console.log(oEvent);
+				  	console.log(this);
+					var name = this.name;
+					 //call function  with arguments
+					Main.get_trans_q(this.q_id);
+				  }
+				}
+			}
+
+      }
+    },
+    series: [
+      {"name":"Общии расходы/приходы",
+        "colorByPoint": true,
+        data: [{
+            name: "Расход",
+            y: data["credit"],
+            q_id: data["credit_q_id"]
+        }, {
+            name: 'Приходы',
+            y: data["debit"],
+            q_id: data["debit_q_id"]
+
+        },]
+    }]
+  
+   
+});
+
+var common_income_credit = data["common_income_credit"];
+common_income_credit_data = []
+for(var i in common_income_credit){
+	common_income_credit_data.push({"name":i, "y":common_income_credit[i]["amnt"] })
+	
+} 
+var common_income_debit = data["common_income_debit"];
+common_income_debit_data = []
+for(var i in common_income_debit){
+	common_income_debit_data.push({"name":i, "y":common_income_debit[i]["amnt"] })
+	
+} 
+
+ //income by context 
+     Highcharts.chart('pie1', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'Приходы'
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.y:.1f} '
+            }
+        }
+    },
+    series: [
+      {"name":"Приходы",
+        "colorByPoint": true,        
+        data:common_income_debit_data
+    }]
+  
+   
+});  
+   
+   
+   
+   //credit by context
+    Highcharts.chart('pie2', {
+    chart: {
+        plotBackgroundColor: null,
+        plotBorderWidth: null,
+        plotShadow: false,
+        type: 'pie'
+    },
+    title: {
+        text: 'расходы '
+    },
+    tooltip: {
+        pointFormat: '{series.name}: <b>{point.y:.1f}</b>'
+    },
+    accessibility: {
+        point: {
+            valueSuffix: '%'
+        }
+    },
+    plotOptions: {
+        pie: {
+            allowPointSelect: true,
+            cursor: 'pointer',
+            dataLabels: {
+                enabled: true,
+                format: '<b>{point.name}</b>: {point.y:.1f} '
+            }
+        }
+    },
+    series: [
+      {"name":"Общии расходы ",
+        "colorByPoint": true,        
+        "data": common_income_credit_data
+    }]
+  
+   
+});
+
+$("#common_info").modal("show");
+
+
+
+
+};
+        
+	
+
+function reload_dashwithfilters(){
+
+    var contra = "";
+	if($("#contragents_checkbox").prop("checked")){
+            contra +="contragents=yes&";
+	}else{
+            contra +="contragents=no&";
+
+	}
+	if($("#accounts_checkbox").prop("checked")){
+            contra +="accounts=yes";
+	}else{
+            contra +="accounts=no";
+
+	}
+	console.log(contra);
+	window.location.href="/?"+contra;
+
+
+
+};
+
+$("#contragents_checkbox").bind("click", function(ev){
+            reload_dashwithfilters();
+
+	});
+$("#accounts_checkbox").bind("click", function(ev){
+
+            reload_dashwithfilters();
+
+	});
+
+Main.operateFormatter = function(value, row, index){
+        return [
+          '<a class="edit" href="javascript:void(0)" title="Like">',
+          '<i class="bi bi-wrench"></i>',
+          '</a>  ',
+          '<a class="remove" href="javascript:void(0)" title="Remove">',
+          '<i class="bi bi-x-octagon-fill"></i>',
+          '</a>'
+        ].join('')
+};
+
+
+
+
+Main.dashboard = Highcharts.chart('container', {
+  chart: {
+    type: 'packedbubble',
+    height: '100%'
+  },
+  title: {
+    text: 'Группировка по объему'
+
+  },
+  tooltip: {
+    useHTML: true,
+    pointFormat: '<b>{point.name}:</b> {point.value} тыс грн. оборот'
+  },
+  plotOptions: {
+    packedbubble: {
+      minSize: '1%',
+      legend: {align: "left"},
+      maxSize: '70%',
+      zMin: 0,
+      zMax: 1000,
+      label: {enabled:true},   
+      layoutAlgorithm: {
+        gravitationalConstant: 0.05,
+        splitSeries: true,
+        seriesInteraction: false,
+        dragBetweenSeries: true,
+        parentNodeLimit: true
+      },
+      dataLabels: {
+        enabled: true,
+        parentNodeFormat: '{series.name}',
+        format: '{point.name}',
+        filter: {
+          property: 'y',
+          operator: '>',
+          value: 1
+        },
+        style: {
+          color: 'black',
+          textOutline: 'none',
+          fontWeight: 'normal'
+        }
+      }
+
+
+	
+    }
+  },
+  events: {"afterAnimate": function(event){
+				   
+				   console.log("upper");
+				   console.log(event);
+
+			}},
+  series: series_data,});
+
+});
+
+
+
+</script>
+<div class="container-fluid">
+    <div class="row">
+
+        <div class="col-3">
+
+            <h5>Журнал операций</h5>
+            <span class="btn btn-primary" role="button" onclick="Main.show_journal()"
+                                     >показать</span>
+
+
+            <h5>Баланс:</h5>
+            {{whole_balance|floatformat:"2g"}} {{base_currency}}
+            <h5>Как считалось: <span class="btn btn-primary"
+                                     data-bs-toggle="collapse"
+                                     href="#collapse_accounts"
+                                     role="button"
+                                     aria-expanded="false"
+                                     aria-controls="collapse_accounts">показать</span> </h5>
+                <div class="collapse" id="collapse_accounts">
+
+                    {% for item in  main_accounts %}
+                        {% if  item.account.is_own %}
+                            {% if item.balance < 0 %}
+                                <p class="account_link" data-account="{{item.account.name}}">
+                                    <strong>{{item.account.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>
+                                </p >
+                            {% else %}
+                                <p class="account_link" data-account="{{item.account.name}}">
+                                 <strong>{{item.account.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>
+                                </p>
+                            {% endif %}
+
+                        {% else %}
+
+                            {% if item.balance > 0 %}
+                                <p class="account_link" data-account="{{item.account.name}}">
+                                    <strong>{{item.account.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>(МЫ должны)
+                                </p>
+                            {% else %}
+                                <p class="account_link" data-account="{{item.account.name}}">
+                                    <strong>{{item.account.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>(НАМ должны)
+                                </p>
+                            {% endif %}
+
+                        {% endif %}
+
+                    {% endfor %}
+                </div>
+            <h5>Общее сальдо( последнии 7 дней)</h5>
+
+                {{ whole_saldo7|floatformat:"2g" }}
+
+            <h5>Сальдо( последнии 90 дней)</h5>
+
+                {{ whole_saldo90|floatformat:"2g" }}
+
+            <h5>Операции(последнии 7 дней)</h5>
+                <span  class="btn btn-primary" onclick="Main.show_all7()"> Посмотреть</span>
+
+            <h5>Операции(последнии 90 дней)</h5>
+
+                <span  class="btn btn-primary" onclick="Main.show_all90()">Посмотреть</span>
+
+                <h5>Общее сальдо проектам: <span class="btn btn-primary"
+                                     data-bs-toggle="collapse"
+                                     href="#collapse_projects"
+                                     role="button"
+                                     aria-expanded="false"
+                                     aria-controls="collapse_projects">показать</span></h5>
+
+                <div class="collapse" id="collapse_projects">
+                    {% for item in  main_projects %}
+
+                       {% if item.balance < 0 %}
+                            <p class="project_link" data-project="{{item.name}}">
+                                <strong>{{item.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>
+                            </p>
+                       {% else %}
+
+                           <p  class="project_link">
+                               <strong>{{item.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>
+                           </p>
+                       {% endif %}
+                    {% endfor %}
+                </div>
+        </div>
+        <div class="col-9 text-center">
+            <div style="position:fixed; top:10px; right:10px; z-index: 2000;"><a class="btn btn-danger" href="/logout">Выйти</a></div>
+
+            <div class="dropdown-menu p-4 text-muted" style="max-width: 400px;" id="xxx" data-context="" data-category="" data-project="" data-title="">
+
+                <p id="project_title">  </p>
+
+                <p>
+                <li> <a class="dropdown-item" onclick="Main.show_project()">общее по проекту</a></li>
+                </p>
+
+                <p>
+                <li><a class="dropdown-item" onclick="Main.project_operations()"> Все операции по проекту </a></li>
+                </p>
+                <p id="context_title">  </p>
+                <p class="mb-0">
+                <li><span class="dropdown-item" onclick="Main.show_map()"> Карта операций</span></li>
+
+                </p>
+                <p>
+                <li><span class="dropdown-item" onclick="Main.show_info()" >Общая информация</span></li>
+                </p>
+                <p class="mb-0">
+                <li><span class="dropdown-item" onclick="Main.show_operation()"> Операции</span></li>
+                </p>
+
+            </div>
+
+
+            <figure class="highcharts-figure">
+
+                <div class="form-check  form-check-inline">
+                    <input class="form-check-input" type="checkbox" value="yes"
+                           {%  if contragents_included %}
+                           checked
+                           {% endif %} id="contragents_checkbox">
+                    <label class="form-check-label" for="contragents_checkox">
+                        Контрагенты
+                    </label>
+                </div>
+                <div class="form-check form-check-inline ">
+                    <input class="form-check-input" type="checkbox"
+                           {%  if accounts_included %}
+                           checked
+                           {% endif %}
+                           value="yes"  id="accounts_checkbox">
+                    <label class="form-check-label" for="accounts_checkbox">
+                        Счета
+                    </label>
+                </div>
+
+
+
+                <div id="container" ></div>
+                <p class="highcharts-description">
+                </p>
+
+
+            </figure>
+
+
+
+            <div class="modal fade"
+                 id="common_info"
+                 tabindex="-1"
+                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Общая информация "<span id="conv_title"> </span>"</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="common_info_dlg">
+                            <div class="row">
+                                <div class="col-lg-12" id="pie_head">
+
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-lg-6" id="pie1">
+
+                                </div>
+                                <div class="col-lg-6" id="pie2">
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade"
+                 id="map_modal"
+                 tabindex="-1"
+                 aria-labelledby="map_exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="map_exampleModalLabel">Карта "<span id="map_info_title"> </span>"</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row" style="min-height:800px">
+                                <div class="col-lg-12" id="map_container">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade"
+                 id="project_common_info"
+                 tabindex="-1"
+                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Общая информация "<span id="project_info_title"> </span>"</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-lg-12" id="ppie_head">
+
+                                </div>
+                            </div>
+
+
+                            <div class="row">
+                                <div class="col-lg-6" id="ppie1">
+
+                                </div>
+                                <div class="col-lg-6" id="ppie2">
+
+                                </div>
+
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-lg-6" id="ppie3">
+
+                                </div>
+                                <div class="col-lg-6" id="ppie4">
+
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade"
+                 id="trans_info"
+                 tabindex="-1"
+                 aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-fullscreen">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Операции  по "<span id="trans_title"> </span>"</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="common_trans_info">
+                            <small>
+                                <table
+                                        id="table_trans"
+                                        data-url=""
+                                        data-id-field="id"
+                                        data-editable="true"
+                                        data-filter-control="true"
+                                        data-editable-url="/my/editable/update/path"
+                                        data-show-search-clear-button="true">
+                                    <thead>
+                                    <tr>
+                                        <th data-field="id" data-filter-control="input">id</th>
+                                        <th data-field="date" data-filter-control="select"> Дата</th>
+                                        <th data-field="debit_credit_alt" data-filter-control="select">тип операции</th>
+                                        <th data-field="amnt" data-filter-control="input">сумма</th>
+                                        <th data-field="currency" data-filter-control="select">валюта</th>
+                                        <th data-field="rate" data-filter-control="select"> Курс</th>
+                                        <th data-field="account" data-filter-control="select">Счет</th>
+                                        <th data-field="contragent" data-filter-control="select" >Контрагент</th>
+                                        <th data-field="to_accounts" data-filter-control="select"> на счет</th>
+                                        <th data-field="to_contragent" data-filter-control="select"> На Контрагента</th>
+                                        <th data-field="project" data-filter-control="select">Проект</th>
+                                        <th data-field="category" data-filter-control="select">category</th>
+                                        <th data-field="tags" data-filter-control="select">tags</th>
+                                        <th data-field="comments" data-filter-control="input">Комментарий</th>
+                                        <th data-field="last_edit" data-filter-control="select"> Последние изменения   </th>
+                                        <th data-field="operate"
+                                            data-clickToSelect="false"
+                                            data-events="window.operateEvents"
+                                            data-formatter="Main.operateFormatter">  Операции   </th>
+
+                                    </thead>
+                                </table>
+                            </small>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="custom_form_modal">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Изменить</h1>
+                            <button type="button"
+                                    class="btn-close"
+                                    data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="custom_form">
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+<script src="/static/bootstrap-table/extensions/editable/bootstrap-table-editable.js"></script>
+
+</body>
+</html>

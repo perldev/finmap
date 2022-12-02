@@ -1,0 +1,5 @@
+
+<form action="{% url 'record-detail' pk=record.pk %}" method="POST">
+    {% render_form serializer %}
+    <input type="submit" value="Сохранить">
+</form>

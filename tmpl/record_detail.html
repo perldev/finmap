@@ -1,0 +1,7 @@
+
+{% load rest_framework %}
+    {% render_form serializer %}
+    <input type="button"
+           onclick="Main.submit_custom_form('/api/record-detail/{{record.pk}}')"
+           class="btn btn-success"
+           value="Сохранить">
