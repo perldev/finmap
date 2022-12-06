@@ -17,7 +17,7 @@
 <script src="/static/jquery-3.6.1.min.js"></script>
 
 <script src="/static/bootstrapv5/js/bootstrap.min.js"></script>
-<script src="/static/jquery.init.js?do=version1"></script>
+<script src="/static/jquery.init.js?do=version4"></script>
 
 <script>
  Date.prototype.yyyymmdd = function() {
@@ -99,11 +99,13 @@ Main.series_data = [
                     {% for item in  main_accounts %}
                         {% if  item.account.is_own %}
                             {% if item.balance < 0 %}
-                                <p class="account_link" data-account="{{item.account.name}}">
+                                <p class="account_link" data-account="{{item.account.name}}"
+                                   data-bs-toggle="tooltip" data-bs-placement="top" title="Посмотреть операции">
                                     <strong>{{item.account.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>
                                 </p >
                             {% else %}
-                                <p class="account_link" data-account="{{item.account.name}}">
+                                <p class="account_link" data-account="{{item.account.name}}"
+                                 data-bs-toggle="tooltip" data-bs-placement="top" title="Посмотреть операции">
                                  <strong>{{item.account.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>
                                 </p>
                             {% endif %}
@@ -111,11 +113,13 @@ Main.series_data = [
                         {% else %}
 
                             {% if item.balance > 0 %}
-                                <p class="account_link" data-account="{{item.account.name}}">
+                                <p class="account_link" data-account="{{item.account.name}}"
+                                   data-bs-toggle="tooltip" data-bs-placement="top" title="Посмотреть операции">
                                     <strong>{{item.account.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>(МЫ должны)
                                 </p>
                             {% else %}
-                                <p class="account_link" data-account="{{item.account.name}}">
+                                <p class="account_link" data-account="{{item.account.name}}"
+                                 data-bs-toggle="tooltip" data-bs-placement="top" title="Посмотреть операции">
                                     <strong>{{item.account.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>(НАМ должны)
                                 </p>
                             {% endif %}
@@ -150,12 +154,13 @@ Main.series_data = [
                     {% for item in  main_projects %}
 
                        {% if item.balance < 0 %}
-                            <p class="project_link" data-project="{{item.name}}">
+                            <p class="project_link" data-project="{{item.name}}"
+                               data-bs-toggle="tooltip" data-bs-placement="top" title="Показать общую информацию на панели">
                                 <strong>{{item.name}}</strong> <span class="text-danger">{{item.balance|floatformat:"2g"}}</span>
                             </p>
                        {% else %}
 
-                           <p  class="project_link">
+                           <p  class="project_link" data-bs-placement="top"   data-project="{{item.name}}" title="Показать общую информацию на панели">
                                <strong>{{item.name}}</strong> <span class="text-success">{{item.balance|floatformat:"2g"}}</span>
                            </p>
                        {% endif %}
@@ -403,6 +408,22 @@ Main.series_data = [
                     </div>
                 </div>
             </div>
+            <div class="modal fade" id="modal_dlg"  role="dialog" aria-labelledby="exampleModalLabel_dlll" aria-hidden="true">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick='hide_modal("modal_dlg")'>
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                      <p id="modal_msg">One fine body…</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
 
 
         </div>

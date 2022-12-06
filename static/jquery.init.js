@@ -861,4 +861,35 @@ Main.dashboard = Highcharts.chart('container', {
 			}},
   series: Main.series_data,});
 
+    //common alerts for ajax
+    Main.thinking_alert = function() {
+        // don't need to translate for Ukranian
+            my_alert("<img src='/static/processing.gif'><br/><h4>Р”СѓРјР°СЋ...</h4>");
+      }
+
+    Main.main_hide_thinking_alert = function() {
+        var $modal = $("#modal_dlg");
+        $modal.modal('hide');
+
+    }
+    Main.hide_modal = function (a) {
+        $("#" + a).modal("hide");
+    }
+
+    Main.my_alert = function(a) {
+        $("#modal_msg").html(a);
+        $("#modal_dlg").modal("show");
+    };
+    // thinking alert for every call to server
+    $( document ).ajaxStart(function() { Main.thinking_alert() });
+    $( document ).ajaxComplete(function() {
+        Main.main_hide_thinking_alert();
+    });
+
+
+});
+
+
+
+
 });
