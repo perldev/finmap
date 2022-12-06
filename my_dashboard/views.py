@@ -59,8 +59,8 @@ def main(request):
     # 7 day do not cache
     whole_balance_prj7 = balance_prj(nw7)
     whole_balance_acc7 = balance_acc(nw7)
-    whole_balance_prj90 = check_cache("balances_prj90", lambda: balance_prj(nw90))
-    whole_balance_acc90 = check_cache("balances_acc90", lambda: balance_acc(nw90))
+    whole_balance_prj90 = check_cache("balances_prj90", lambda: balance_prj(nw90), 600)
+    whole_balance_acc90 = check_cache("balances_acc90", lambda: balance_acc(nw90), 600)
 
     saldo = Decimal("0.0")
     saldo7 = Decimal("0.0")
