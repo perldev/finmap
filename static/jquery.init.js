@@ -16,9 +16,8 @@
             };
 
  $(function() {
-      $("#table_trans").bootstrapTable();
       Main.table = $("#table_trans");
-
+    /* do not change this two statements */
        window.operateEvents = {
         'click .edit': function (e, value, row, index) {
             var my_url = "/api/record-detail/" + row.id;
@@ -36,6 +35,9 @@
                                       })
         }
       };
+      $("#table_trans").bootstrapTable();
+      /* do not change this two statements */
+
     $(".project_link").css({"cursor":"pointer"});
     $(".project_link").bind("click", function(e){
         var name = $(this).data("project");
