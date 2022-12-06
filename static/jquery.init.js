@@ -887,7 +887,7 @@ Main.dashboard = Highcharts.chart('container', {
     });
 
 
-});
+
 
 
 
