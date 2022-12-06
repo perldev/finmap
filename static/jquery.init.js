@@ -864,7 +864,7 @@ Main.dashboard = Highcharts.chart('container', {
     //common alerts for ajax
     Main.thinking_alert = function() {
         // don't need to translate for Ukranian
-            Main.my_alert("<img src='/static/processing.gif'><br/><h4>Р”СѓРјР°СЋ...</h4>");
+            Main.my_alert("<img src='/static/processing.gif'><br/>");
       }
 
     Main.main_hide_thinking_alert = function() {
