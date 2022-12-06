@@ -30,32 +30,32 @@
           (dd>9 ? '' : '0') + dd
          ].join('-');
 };
-window.operateEvents = {
-    'click .edit': function (e, value, row, index) {
-        var my_url = "/api/record-detail/" + row.id;
-        $.ajax({"method": "GET",
-                "url": my_url }).done(function( msg ) {
-                                  $("#custom_form").html(msg);
-                                  $("#custom_form_modal").modal("show");
 
-                  });
-
-
-    },
-    'click .remove': function (e, value, row, index) {
-        Main.table.bootstrapTable('remove', {
-                                  field: 'id',
-                                  values: [row.id]
-                                  })
-    }
-  };
 
 
 
  $(function() {
       $("#table_trans").bootstrapTable();
       Main.table = $("#table_trans");
+        window.operateEvents = {
+        'click .edit': function (e, value, row, index) {
+            var my_url = "/api/record-detail/" + row.id;
+            $.ajax({"method": "GET",
+                    "url": my_url }).done(function( msg ) {
+                                      $("#custom_form").html(msg);
+                                      $("#custom_form_modal").modal("show");
 
+                      });
+
+
+        },
+        'click .remove': function (e, value, row, index) {
+            Main.table.bootstrapTable('remove', {
+                                      field: 'id',
+                                      values: [row.id]
+                                      })
+        }
+      };
 
      //data-account="{{item.account.name}}"
     $(".project_link").css({"cursor":"pointer"});

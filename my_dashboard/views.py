@@ -21,6 +21,16 @@ from fin.common import put2cache, get_fromcache
 from django.contrib.auth.decorators import login_required
 
 
+def check_cache(key, callback_func, t=1500):
+    val = get_fromcache(key)
+    if val is None:
+        result = callback_func()
+        put2cache(key, result, t)
+        return result
+    else:
+        return val
+
+
 def account_index(req):
     return render(req, "start.html", {})
 
@@ -40,19 +50,17 @@ def main(request):
     nw90 = nw - dt(days=90)
     # return this {"result": {"info": accounts_dict, "recs": accounts_recs}}
 
-
     result_info_fist = {"base_currency": "UAH"}
-    whole_balance_prj = balance_prj()
-    whole_balance_acc = balance_acc()
-    put2cache("balances", whole_balance_acc)
 
+    whole_balance_prj = check_cache("balances_prj", balance_prj)
+    whole_balance_acc = check_cache("balances_acc", balance_acc)
 
     acc_source = whole_balance_acc["result"]["source"]
+    # 7 day do not cache
     whole_balance_prj7 = balance_prj(nw7)
     whole_balance_acc7 = balance_acc(nw7)
-
-    whole_balance_prj90 = balance_prj(nw90)
-    whole_balance_acc90 = balance_acc(nw90)
+    whole_balance_prj90 = check_cache("balances_prj90", lambda: balance_prj(nw90))
+    whole_balance_acc90 = check_cache("balances_acc90", lambda: balance_acc(nw90))
 
     saldo = Decimal("0.0")
     saldo7 = Decimal("0.0")
@@ -76,16 +84,14 @@ def main(request):
 
     accinfo = whole_balance_prj["result"]["info"]
     for i in accinfo.keys():
-        main_projects_recs.append({"name": i, "balance": accinfo[i]})
+        main_projects_recs.append({"name": i,
+                                   "balance": accinfo[i]})
 
     result_info_fist["whole_balance"] = saldo
     result_info_fist["whole_saldo7"] = saldo7
     result_info_fist["whole_saldo90"] = saldo90
     result_info_fist["main_projects"] = main_projects_recs
     result_info_fist["main_accounts"] = main_accounts_recs
-    print(result_info_fist["whole_balance"])
-
-
     projects_d = {}
     contragents_d = {}
     accounts_d = {}

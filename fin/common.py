@@ -12,7 +12,7 @@ def get_fromcache(k):
     return cache.get(k)
 
 
-def put2cache(q, k, t=300):
+def put2cache(k, q,  t=300):
     cache.set(k, q,  t)
 
 def json_true(req, dictt=None):
