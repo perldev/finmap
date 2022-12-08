@@ -775,7 +775,7 @@ function reload_dashwithfilters(){
 
 	}
 	console.log(contra);
-	window.location.href="/?"+contra;
+	window.location.href="/dashboard?"+contra;
 
 
 
