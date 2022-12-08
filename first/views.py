@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.db.models import Q
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.mixins import LoginRequiredMixin
-
+from rest_framework import pagination
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -222,7 +222,6 @@ class ContragentsViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
         instance = serializer.save()
         perm = contragents_permission(accounter=self.request.user, account_id=instance.id)
         perm.save()
-        perm.save()
 
     def get_queryset(self):
         accounts_for = [i.account_id for i in contragents_permission.objects.filter(accounter=self.request.user)]
@@ -240,12 +239,11 @@ class RecordViewSet(LoginRequiredMixin, viewsets.ModelViewSet):
     """
     serializer_class = RecordSerializer
 
-    #TODO add caching for this operation
     def list(self, request, *args, **kwargs):
         query = self.get_queryset()
         res_q = self.filter_queryset(query)
-        print(res_q.query)
-        serdata = RecordSerializerOperator(res_q, many=True, context={'request': request})
+        paged = self.paginate_queryset(res_q)
+        serdata = RecordSerializerOperator(paged, many=True, context={'request': request})
         return Response(serdata.data)
 
     def get_serializer_context(self):
